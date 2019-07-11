@@ -1,4 +1,5 @@
 import tweepy
+import time
 
 print("testing bot")
 
@@ -28,12 +29,23 @@ def store_last_seen_tweet(last_seen_id, file_name):
     f_write.close()
     return
 
-last_seen_tweet = retrieve_last_seen_tweet(FILE_NAME)
-#mentions_timeline() returns a list of 20 most recent mentions
-mentions = api.mentions_timeline(last_seen_tweet, tweet_mode="extended")
+def reply_to_tweet():
+    print("retrieving and replying to tweets...")
+    last_seen_tweet = retrieve_last_seen_tweet(FILE_NAME)
+    #mentions_timeline() returns a list of 20 most recent mentions
+    mentions = api.mentions_timeline(last_seen_tweet, tweet_mode="extended")
 
-#reversing to read old tweets first
-for mention in reversed(mentions):
-    print(str(mention.id) + " - " + mention.text)
-    if "@7elevenroast" in mention.text.lower():
-        print("found @ mention")
+    #reversing to read old tweets first
+    for mention in reversed(mentions):
+        print(str(mention.id) + " - " + mention.text)
+        if "@7elevenroast" in mention.text.lower():
+            print("found @ mention")
+            #responding to tweet mention
+            api.update_status("@" + mention.user.screen_name +
+                              "Come to 7-Eleven to enjoy a nice cup of roasted hot coffee! I'll pay :)",
+                              mention.id)
+
+#loop to reply every 60 seconds
+while True:
+    reply_to_tweet()
+    time.sleep(60)
