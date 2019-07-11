@@ -1,8 +1,6 @@
 import tweepy
 import time
 
-print("testing bot")
-
 #assigning Twitter keys to variables
 CONSUMER_KEY = "CbQBaHTweTSxOb2ss0pyx3am4"
 CONSUMER_SECRET = "wFhobn6SRuXl052vtBbr0KWsOJ8LjMPXHVLRbHfFFT3gCZZx4b"
@@ -37,12 +35,14 @@ def reply_to_tweet():
 
     #reversing to read old tweets first
     for mention in reversed(mentions):
-        print(str(mention.id) + " - " + mention.text)
-        if "@7elevenroast" in mention.text.lower():
+        print(str(mention.id) + " - " + mention.full_text)
+        last_seen_tweet = mention.id
+        store_last_seen_tweet(last_seen_tweet, FILE_NAME)
+        if "@7elevenroast" in mention.full_text.lower():
             print("found @ mention")
             #responding to tweet mention
             api.update_status("@" + mention.user.screen_name +
-                              "Come to 7-Eleven to enjoy a nice cup of roasted hot coffee! I'll pay :)",
+                              " Come to 7-Eleven to enjoy a nice cup of roasted hot coffee! I'll pay :)",
                               mention.id)
 
 #loop to reply every 60 seconds
