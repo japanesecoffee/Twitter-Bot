@@ -3,6 +3,9 @@ import time
 #removed keys and generated new keys in keys.py
 #keys.py added to gitignore, so view sample_keys.py to see format
 import keys
+from bs4 import BeautifulSoup
+from urllib.request import Request, urlopen
+from googlesearch import search
 
 #using api object to communicate with Twitter
 auth = tweepy.OAuthHandler(keys.CONSUMER_KEY, keys.CONSUMER_SECRET)
@@ -35,14 +38,47 @@ def reply_to_tweet():
         print(str(mention.id) + " - " + mention.full_text)
         last_seen_tweet = mention.id
         store_last_seen_tweet(last_seen_tweet, FILE_NAME)
-        if "@7elevenroast" in mention.full_text.lower():
-            print("found @ mention")
+        if "#" in mention.full_text.lower():
+            print("found #")
+            
+            location = get_location(mention.full_text)
+            weather = get_weather(location)
+
             #responding to tweet mention
             api.update_status("@" + mention.user.screen_name +
-                              " Come to 7-Eleven to enjoy a nice cup of roasted hot coffee! I'll pay :)",
+                              weather,
                               mention.id)
 
-#loop to reply every 60 seconds
+def get_location(tweet):
+    #takes tweet and returns only the substring attached to hashtag
+    tweet_location = [i.strip("#") for i in tweet.split() if i.startswith("#")][0]
+    tweet_location += " today weather.com"
+    return tweet_location
+
+def get_weather(query):
+    for url in search(query, stop=1):
+        print("Result is " + url)
+
+    #this code sends a request and reads the webpage enclosed in response to the request
+    request = Request(url, headers={"User-Agent": "Mozilla/5.0"})
+
+    webpage = urlopen(request).read()
+    soup = BeautifulSoup(webpage, "html.parser")
+
+    try:
+        title = soup.findAll("span", "today-daypart-title")[0].string
+        phrase = soup.findAll("span", "today-daypart-wxphrase")[0].string        
+    except IndexError as e:
+        forecast = (" could not find the weather, check back later")
+        print(e)
+    else:
+        forecast = (" forecast for " + title + " is " + phrase)
+        print(forecast)
+    
+    return forecast
+    
+
+#loop to reply every 30 seconds
 while True:
     reply_to_tweet()
-    time.sleep(60)
+    time.sleep(30)
